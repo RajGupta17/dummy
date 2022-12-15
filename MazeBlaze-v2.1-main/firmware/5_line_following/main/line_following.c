@@ -11,7 +11,7 @@ int final_run[NO_OF_NODES] = {0};  // after removing redundant values from dry r
 float error = 0, prev_error = 0, difference, cumulative_error, correction;
 float left_duty_cycle = 0, right_duty_cycle = 0;
 
-float kp = 50, ki = 0, kd = 60;
+float kp = 50, ki = 0.01 , kd = 60;
 
 const int weights[5] = {3, 1, 0, -1, -3};
 
@@ -163,18 +163,18 @@ void line_follow_task(void *arg)
         if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
         {
             left = 1;
-            vTaskDelay(10 / portTICK_PERIOD_MS);
+            vTaskDelay(20 / portTICK_PERIOD_MS);
             get_raw_lsa(); // funtion that updates the lsa readings
             if (left == 1 || right == 1)
             {
                 if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
                 {
-                    // printf("left flag confirmed\n");
+                    printf("left flag confirmed\n");
                     left = 1;
                 }
                 else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
                 {
-                    // printf("Right flag confirmed\n");
+                    printf("Right flag confirmed\n");
                     right = true;
                 }
                 else
@@ -187,18 +187,18 @@ void line_follow_task(void *arg)
         else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
         {
             right = true;
-            vTaskDelay(10 / portTICK_PERIOD_MS);
+            vTaskDelay(20 / portTICK_PERIOD_MS);
             get_raw_lsa(); // funtion that updates the lsa readings
             if (left == 1 || right == 1)
             {
                 if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
                 {
-                    // printf("left flag confirmed\n");
+                    printf("left flag confirmed\n");
                     left = 1;
                 }
                 else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
                 {
-                    // printf("Right flag confirmed\n");
+                    printf("Right flag confirmed\n");
                     right = 1;
                 }
                 else
@@ -226,7 +226,7 @@ void line_follow_task(void *arg)
                 get_raw_lsa();
                 vTaskDelay(10 / portTICK_PERIOD_MS);
                 counter++;
-                printf("%d\n", counter);
+                // printf("%d\n", counter);
                 if (counter >= 15 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[1] == 1000)
                 {
                     while (1)
@@ -237,7 +237,7 @@ void line_follow_task(void *arg)
                     }
                 }
             }
-            printf("\n");
+            // printf("\n");
 
             vTaskDelay(40 / portTICK_PERIOD_MS);
 
@@ -247,12 +247,12 @@ void line_follow_task(void *arg)
 
             if (lsa_reading[1] == 0 && lsa_reading[3] == 0 && lsa_reading[2] == 0)
             {
-                // printf("ONLY LEFT DETECTED");
+                printf("ONLY LEFT DETECTED");
                 only_left = true;
             }
             else if (lsa_reading[2] == 1000 && (lsa_reading[1] == 1000 || lsa_reading[3] == 1000))
             {
-                // printf("STR+LEFT DETECTED");
+                printf("STR+LEFT DETECTED");
                 only_left = false;
             }
         }
@@ -268,16 +268,16 @@ void line_follow_task(void *arg)
 
             vTaskDelay(40 / portTICK_PERIOD_MS);
             get_raw_lsa();
-            // printf("%d %d %d %d %d\n", lsa_reading[0], lsa_reading[1], lsa_reading[2], lsa_reading[3], lsa_reading[4]);
+            printf("%d %d %d %d %d\n", lsa_reading[0], lsa_reading[1], lsa_reading[2], lsa_reading[3], lsa_reading[4]);
 
             if ((lsa_reading[0] == 0 && lsa_reading[1] == 0 && lsa_reading[3] == 0 && lsa_reading[2] == 0 && lsa_reading[4] == 0))
             {
-                // printf("ONLY RIGHT DETECTED");
+                printf("ONLY RIGHT DETECTED");
                 only_right = true;
             }
             else if (lsa_reading[2] == 1000 && (lsa_reading[1] == 1000 || lsa_reading[3] == 1000))
             {
-                // printf("STR+RIGHT DETECTED");
+                printf("STR+RIGHT DETECTED");
                 only_right = false;
             }
         }
@@ -449,13 +449,13 @@ void line_follow_task(void *arg)
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
 
-        // printf("The current readings in ARRAY are : ");
+        printf("The current readings in ARRAY are : ");
 
-        // for (int i = 0; i < pindex; i++)
-        // {
-        //     printf("%d ", dry_run[i]);
-        // }
-        // printf("\n");
+        for (int i = 0; i < pindex; i++)
+        {
+            printf("%d ", dry_run[i]);
+        }
+        printf("\n");
     }
 }
 
