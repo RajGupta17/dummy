@@ -211,11 +211,33 @@ void line_follow_task(void *arg)
 
         if (left == 1) // checks left first
         {
+            // if (lsa_reading[0] == 0 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+            // {
+            //     while(lsa_reading[0] == 0 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+            //     {
+            //         get_raw_lsa() ;
+            //         set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
+            //         set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
+            //     }
+            // }
+            int counter = 0;
             while (lsa_reading[0] == 1000 && lsa_reading[1] == 1000)
             {
                 get_raw_lsa();
                 vTaskDelay(10 / portTICK_PERIOD_MS);
+                counter++;
+                printf("%d\n", counter);
+                if (counter >= 15 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[1] == 1000)
+                {
+                    while (1)
+                    {
+                        set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
+                        set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
+                        vTaskDelay(10 / portTICK_PERIOD_MS);
+                    }
+                }
             }
+            printf("\n");
 
             vTaskDelay(40 / portTICK_PERIOD_MS);
 
@@ -295,7 +317,7 @@ void line_follow_task(void *arg)
                 set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, 75);
                 set_motor_speed(MOTOR_A_1, MOTOR_BACKWARD, 75);
 
-                if (lsa_reading[1] == 1000  && ll)
+                if (lsa_reading[1] == 1000 && ll)
                 {
                     // vTaskDelay(80 / portTICK_PERIOD_MS);
                     set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
@@ -427,19 +449,21 @@ void line_follow_task(void *arg)
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
 
-        printf("The current readings in ARRAY are : ");
+        // printf("The current readings in ARRAY are : ");
 
-        for (int i = 0; i < pindex; i++)
-        {
-            printf("%d ", dry_run[i]);
-        }
-        printf("\n");
+        // for (int i = 0; i < pindex; i++)
+        // {
+        //     printf("%d ", dry_run[i]);
+        // }
+        // printf("\n");
     }
 }
 
 void path_follow_task(void *arg)
 {
     printf("oompalompa begins here");
+
+    int final_traversal = 1;
     simplify_path();
     while (1)
     {
@@ -457,7 +481,7 @@ void path_follow_task(void *arg)
                 }
                 else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
                 {
-                    right = 1 ;
+                    right = 1;
                 }
                 else
                 {
@@ -491,7 +515,9 @@ void path_follow_task(void *arg)
 
         if (left == 1 || right == 1)
         {
-
+            if (final_run[final_traversal] - final_run[final_traversal - 1] == -1)
+            {
+            }
         }
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -515,7 +541,7 @@ void suspend_resume_tasks(void *arg)
 
             printf("Boot Button was pressed . Bye World ! All Tasks are suspended \n");
             vTaskSuspend(taskhandle1);
-            //vTaskSuspend(taskhandle2);
+            vTaskSuspend(taskhandle2);
             set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
             set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
             // Suspend Tasks
