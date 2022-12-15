@@ -169,12 +169,12 @@ void line_follow_task(void *arg)
             {
                 if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
                 {
-                    printf("left flag confirmed\n");
+                    // printf("left flag confirmed\n");
                     left = 1;
                 }
                 else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
                 {
-                    printf("Right flag confirmed\n");
+                    // printf("Right flag confirmed\n");
                     right = true;
                 }
                 else
@@ -193,12 +193,12 @@ void line_follow_task(void *arg)
             {
                 if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
                 {
-                    printf("left flag confirmed\n");
+                    // printf("left flag confirmed\n");
                     left = 1;
                 }
                 else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
                 {
-                    printf("Right flag confirmed\n");
+                    // printf("Right flag confirmed\n");
                     right = 1;
                 }
                 else
@@ -221,7 +221,7 @@ void line_follow_task(void *arg)
 
             get_raw_lsa();
 
-            printf("%d %d %d %d %d\n", lsa_reading[0], lsa_reading[1], lsa_reading[2], lsa_reading[3], lsa_reading[4]);
+            // printf("%d %d %d %d %d\n", lsa_reading[0], lsa_reading[1], lsa_reading[2], lsa_reading[3], lsa_reading[4]);
 
             if (lsa_reading[1] == 0 && lsa_reading[3] == 0 && lsa_reading[2] == 0)
             {
@@ -246,7 +246,7 @@ void line_follow_task(void *arg)
 
             vTaskDelay(40 / portTICK_PERIOD_MS);
             get_raw_lsa();
-            printf("%d %d %d %d %d\n", lsa_reading[0], lsa_reading[1], lsa_reading[2], lsa_reading[3], lsa_reading[4]);
+            // printf("%d %d %d %d %d\n", lsa_reading[0], lsa_reading[1], lsa_reading[2], lsa_reading[3], lsa_reading[4]);
 
             if ((lsa_reading[0] == 0 && lsa_reading[1] == 0 && lsa_reading[3] == 0 && lsa_reading[2] == 0 && lsa_reading[4] == 0))
             {
@@ -404,18 +404,17 @@ void line_follow_task(void *arg)
                 vTaskDelay(10 / portTICK_PERIOD_MS);
             }
         }
-        //stop condition req
-        if (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
-        {
-            get_raw_lsa();
-            printf("ALL WHITE BOX DETECTED");
-            while (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
-            {
-                set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
-                set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
-            }
-        }
-        // Line Following
+        // // stop condition req
+        // if (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+        // {
+        //     printf("ALL WHITE BOX DETECTED");
+        //     while (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+        //     {
+        //         get_raw_lsa();
+        //         set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
+        //         set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
+        //     }
+        // }
 
         calculate_error();
         calculate_correction();
@@ -516,7 +515,7 @@ void suspend_resume_tasks(void *arg)
 
             printf("Boot Button was pressed . Bye World ! All Tasks are suspended \n");
             vTaskSuspend(taskhandle1);
-            vTaskSuspend(taskhandle2);
+            //vTaskSuspend(taskhandle2);
             set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
             set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
             // Suspend Tasks
