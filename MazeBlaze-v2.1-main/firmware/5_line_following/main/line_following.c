@@ -6,7 +6,7 @@
 int pindex = 1;
 #define NO_OF_NODES 100
 int dry_run[NO_OF_NODES] = {1, 0}; // To be filled during dry run
-int final_run[NO_OF_NODES] = {0};                                               // after removing redundant values from dry run
+int final_run[NO_OF_NODES] = {0};  // after removing redundant values from dry run
 
 float error = 0, prev_error = 0, difference, cumulative_error, correction;
 float left_duty_cycle = 0, right_duty_cycle = 0;
@@ -15,9 +15,9 @@ float kp = 50, ki = 0, kd = 60;
 
 const int weights[5] = {3, 1, 0, -1, -3};
 
-TaskHandle_t taskhandle1=NULL;
-TaskHandle_t taskhandle2=NULL;
-TaskHandle_t taskhandle3=NULL;
+TaskHandle_t taskhandle1 = NULL;
+TaskHandle_t taskhandle2 = NULL;
+TaskHandle_t taskhandle3 = NULL;
 
 #define BOOT_BUTTON 0
 
@@ -31,7 +31,7 @@ TaskHandle_t taskhandle3=NULL;
 /*variables which help to decide which turns to take*/
 void simplify_path()
 {
-    printf("labababab") ;
+    printf("labababab");
     int prev_index = 0;
     int prev_value = dry_run[prev_index];
 
@@ -157,7 +157,7 @@ void line_follow_task(void *arg)
 {
 
     while (1)
-    {   
+    {
         get_raw_lsa(); // funtion that updates the lsa readings
 
         if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
@@ -217,7 +217,7 @@ void line_follow_task(void *arg)
                 vTaskDelay(10 / portTICK_PERIOD_MS);
             }
 
-            vTaskDelay(70 / portTICK_PERIOD_MS);
+            vTaskDelay(40 / portTICK_PERIOD_MS);
 
             get_raw_lsa();
 
@@ -225,18 +225,18 @@ void line_follow_task(void *arg)
 
             if (lsa_reading[1] == 0 && lsa_reading[3] == 0 && lsa_reading[2] == 0)
             {
-                printf("ONLY LEFT DETECTED");
+                // printf("ONLY LEFT DETECTED");
                 only_left = true;
             }
             else if (lsa_reading[2] == 1000 && (lsa_reading[1] == 1000 || lsa_reading[3] == 1000))
             {
-                printf("STR+LEFT DETECTED");
+                // printf("STR+LEFT DETECTED");
                 only_left = false;
             }
         }
         else if (right == 1)
         {
-            printf("Success 101\n");
+            // printf("Success 101\n");
 
             while (lsa_reading[4] == 1000 && lsa_reading[3] == 1000)
             {
@@ -244,18 +244,18 @@ void line_follow_task(void *arg)
                 vTaskDelay(10 / portTICK_PERIOD_MS);
             }
 
-            vTaskDelay(70 / portTICK_PERIOD_MS);
+            vTaskDelay(40 / portTICK_PERIOD_MS);
             get_raw_lsa();
             printf("%d %d %d %d %d\n", lsa_reading[0], lsa_reading[1], lsa_reading[2], lsa_reading[3], lsa_reading[4]);
 
             if ((lsa_reading[0] == 0 && lsa_reading[1] == 0 && lsa_reading[3] == 0 && lsa_reading[2] == 0 && lsa_reading[4] == 0))
             {
-                printf("ONLY RIGHT DETECTED");
+                // printf("ONLY RIGHT DETECTED");
                 only_right = true;
             }
             else if (lsa_reading[2] == 1000 && (lsa_reading[1] == 1000 || lsa_reading[3] == 1000))
             {
-                printf("STR+RIGHT DETECTED");
+                // printf("STR+RIGHT DETECTED");
                 only_right = false;
             }
         }
@@ -295,7 +295,7 @@ void line_follow_task(void *arg)
                 set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, 75);
                 set_motor_speed(MOTOR_A_1, MOTOR_BACKWARD, 75);
 
-                if ((lsa_reading[1] == 1000 && lsa_reading[2] == 1000) && ll)
+                if (lsa_reading[1] == 1000  && ll)
                 {
                     // vTaskDelay(80 / portTICK_PERIOD_MS);
                     set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
@@ -339,8 +339,6 @@ void line_follow_task(void *arg)
 
                 set_motor_speed(MOTOR_A_0, MOTOR_BACKWARD, 75);
                 set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, 75);
-
-                // vTaskDelay(100 / portTICK_PERIOD_MS);
 
                 if (lsa_reading[2] == 1000)
                 {
@@ -406,9 +404,10 @@ void line_follow_task(void *arg)
                 vTaskDelay(10 / portTICK_PERIOD_MS);
             }
         }
-        printf("in lfr");
+        //stop condition req
         if (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
         {
+            get_raw_lsa();
             printf("ALL WHITE BOX DETECTED");
             while (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
             {
@@ -429,70 +428,120 @@ void line_follow_task(void *arg)
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
 
-        // printf("The current readings in ARRAY are : ");
+        printf("The current readings in ARRAY are : ");
 
-        // for (int i = 0; i < pindex; i++)
-        // {
-        //     printf("%d ", dry_run[i]);
-        // }
-        // printf("\n");
+        for (int i = 0; i < pindex; i++)
+        {
+            printf("%d ", dry_run[i]);
+        }
+        printf("\n");
     }
 }
 
-void path_follow_task(void *arg){
-        
-    while(1){
-        printf("oompalompa") ;
-        simplify_path();
-        vTaskDelay(10 / portTICK_PERIOD_MS) ;
-    } 
+void path_follow_task(void *arg)
+{
+    printf("oompalompa begins here");
+    simplify_path();
+    while (1)
+    {
+
+        if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
+        {
+            left = 1;
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+            get_raw_lsa(); // funtion that updates the lsa readings
+            if (left == 1 || right == 1)
+            {
+                if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
+                {
+                    left = 1;
+                }
+                else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+                {
+                    right = 1 ;
+                }
+                else
+                {
+                    left = 0;
+                    right = 0;
+                }
+            }
+        }
+        else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+        {
+            right = true;
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+            get_raw_lsa(); // funtion that updates the lsa readings
+            if (left == 1 || right == 1)
+            {
+                if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
+                {
+                    left = 1;
+                }
+                else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+                {
+                    right = 1;
+                }
+                else
+                {
+                    left = 0;
+                    right = 0;
+                }
+            }
+        }
+
+        if (left == 1 || right == 1)
+        {
+
+        }
+
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
 }
 
-void suspend_resume_tasks(void *arg){
-    //Task used for suspending task 1 and task 2 when boot button is pressed . Has Higher priority than both of these . 
+void suspend_resume_tasks(void *arg)
+{
+    // Task used for suspending task 1 and task 2 when boot button is pressed . Has Higher priority than both of these .
 
+    static bool switcher = 1; // switcher variable used to switch between resume and suspend functions
+    bool once1 = 1;
+    while (1)
+    {
+        vTaskDelay(100 / portTICK_PERIOD_MS);
 
-    static bool switcher =1;   //switcher variable used to switch between resume and suspend functions 
-    bool once1=1;
-    while (1){
-    vTaskDelay(100/portTICK_PERIOD_MS);
+        bool boot_button_state = gpio_get_level((gpio_num_t)BOOT_BUTTON); // Gets the state of the boot button . If it is pressed gpio pin becomes low level.
 
-    bool boot_button_state = gpio_get_level((gpio_num_t) BOOT_BUTTON );  // Gets the state of the boot button . If it is pressed gpio pin becomes low level.
+        if (!boot_button_state && switcher && once1)
+        { // if tasks are to be suspended
 
-    
-
-        if (!boot_button_state && switcher && once1){    // if tasks are to be suspended 
-
-        printf("Boot Button was pressed . Bye World ! All Tasks are suspended \n");
-        vTaskSuspend(taskhandle1);
-        vTaskSuspend(taskhandle2); 
-        set_motor_speed(MOTOR_A_0,MOTOR_STOP,0);
-        set_motor_speed(MOTOR_A_1,MOTOR_STOP,0);
-            //Suspend Tasks 
-         //Wait some time . To prevent immediately switching to resume 
-        switcher=0;
-        vTaskDelay(3000/portTICK_PERIOD_MS); 
+            printf("Boot Button was pressed . Bye World ! All Tasks are suspended \n");
+            vTaskSuspend(taskhandle1);
+            vTaskSuspend(taskhandle2);
+            set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
+            set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
+            // Suspend Tasks
+            // Wait some time . To prevent immediately switching to resume
+            switcher = 0;
+            vTaskDelay(3000 / portTICK_PERIOD_MS);
         }
-        boot_button_state=gpio_get_level((gpio_num_t) BOOT_BUTTON );
-        if (!boot_button_state && !switcher && once1){     // if tasks are to be resumed 
+        boot_button_state = gpio_get_level((gpio_num_t)BOOT_BUTTON);
+        if (!boot_button_state && !switcher && once1)
+        { // if tasks are to be resumed
 
             printf("Boot Button was pressed . Path planning task has been resumed only \n");
-    
-            vTaskResume(taskhandle2);  //Resume Tasks
+
+            vTaskResume(taskhandle2); // Resume Tasks
+
             printf("resumed");
-            vTaskDelay(3000/portTICK_PERIOD_MS);  //Wait some time . To prevent immediately switching to suspend
-            once1=false;
+
+            vTaskDelay(3000 / portTICK_PERIOD_MS); // Wait some time . To prevent immediately switching to suspend
+            once1 = false;
         }
-
-        
-
-    
-
     }
 }
 
 // end of task
-bool once =true;
+bool once = true;
 void app_main()
 {
     ESP_ERROR_CHECK(enable_lsa());
@@ -500,9 +549,10 @@ void app_main()
 
     xTaskCreate(&line_follow_task, "line_follow_task", 4096, NULL, 1, &taskhandle1);
     xTaskCreate(&path_follow_task, "path_follow_task", 4096, NULL, 1, &taskhandle2);
-    if (once){
-    vTaskSuspend(taskhandle2);
-    once=false;
+    if (once)
+    {
+        vTaskSuspend(taskhandle2);
+        once = false;
     }
-    xTaskCreate(&suspend_resume_tasks,"SRTASK",2048,NULL,4,&taskhandle3);
+    xTaskCreate(&suspend_resume_tasks, "SRTASK", 2048, NULL, 4, &taskhandle3);
 }
