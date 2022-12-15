@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "*.tcc": "c",
+        "bitset": "c",
+        "unordered_map": "c",
+        "fstream": "c",
+        "istream": "c",
+        "ostream": "c",
+        "streambuf": "c",
+        "functional": "c"
+    }
+}
