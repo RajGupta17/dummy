@@ -1,4 +1,4 @@
-# Install script for directory: /home/raj/esp/esp-idf/components/soc
+# Install script for directory: /home/prit/esp/esp-idf/components/soc
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,8 +34,8 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/raj/MazeBlaze-v2.1-main/firmware/5_line_following/build/esp-idf/soc/src/esp32/cmake_install.cmake")
-  include("/home/raj/MazeBlaze-v2.1-main/firmware/5_line_following/build/esp-idf/soc/soc/cmake_install.cmake")
+  include("/home/prit/Desktop/dummy/MazeBlaze-v2.1-main/firmware/5_line_following/build/esp-idf/soc/src/esp32/cmake_install.cmake")
+  include("/home/prit/Desktop/dummy/MazeBlaze-v2.1-main/firmware/5_line_following/build/esp-idf/soc/soc/cmake_install.cmake")
 
 endif()
 

@@ -1,404 +1,86 @@
 #include "mazeblaze2.h"
 #include "tuning_http_server.h"
-#include "wifi_handler.h"
 #include "driver/gpio.h"
 
-/*For Line following*/
+/*Variables created for path planning testing at 2*/
+int test_path[2000] = {1, 0};
+int pindex = 1;
+#define NO_OF_NODES 100
+int dry_run[NO_OF_NODES] = {1, 2, 3, 2, 1, 3, 2, 1, 2, 3, 2, 4, 3, 1, 4, 3, 1}; // To be filled during dry run
+int final_run[NO_OF_NODES] = {0};                                               // after removing redundant values from dry run
+
 float error = 0, prev_error = 0, difference, cumulative_error, correction;
 float left_duty_cycle = 0, right_duty_cycle = 0;
-// we dont need a right sensor prev reading since we are using left follow
 
-float kp = 15, ki = 0.1, kd = 35;
+float kp = 50, ki = 0, kd = 60;
 
 const int weights[5] = {3, 1, 0, -1, -3};
+
+#define BOOT_BUTTON 0
+
+// MOTOR A0 ---> Right
+// MOTOR A1 ---> Left
 
 /*This method involves tuning kp , ki ,kd physically*/
 #define GOOD_DUTY_CYCLE 80
 #define MIN_DUTY_CYCLE 50
 #define MAX_DUTY_CYCLE 85
 /*variables which help to decide which turns to take*/
-
-float bound(float val, float min, float max);
-void calculate_correction();
-void calculate_error();
-
-/*For path planning*/
-char path[10000] = ""; // array for storing path
-int path_index = 0;
-
-bool left = false, right = false;
-bool found_left = false, found_straight = false, found_right = false, black = false;
-bool only_left = false bool R = false;
-bool ll = false;
-
-// MOTOR A0 ---> Right
-// MOTOR A1 ---> Left
-
-void selection()
+void simplify_path()
 {
-    if (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 &&#include "mazeblaze2.h"
-#include "tuning_http_server.h"
-#include "wifi_handler.h"
-#include "driver/gpio.h"
+    int prev_index = 0;
+    int prev_value = dry_run[prev_index];
 
-/*For Line following*/
-float error = 0, prev_error = 0, difference, cumulative_error, correction;
-float left_duty_cycle = 0, right_duty_cycle = 0;
-// we dont need a right sensor prev reading since we are using left follow
-
-float kp = 15, ki = 0.1, kd = 35;
-
-const int weights[5] = {3, 1, 0, -1, -3};
-
-/*This method involves tuning kp , ki ,kd physically*/
-#define GOOD_DUTY_CYCLE 80
-#define MIN_DUTY_CYCLE 50
-#define MAX_DUTY_CYCLE 85
-/*variables which help to decide which turns to take*/
-
-float bound(float val, float min, float max);
-void calculate_correction();
-void calculate_error();
-
-/*For path planning*/
-char path[10000] = ""; // array for storing path
-int path_index = 0;
-
-bool left = false, right = false;
-bool found_left = false, found_straight = false, found_right = false, black = false;
-bool only_left = false bool R = false;
-bool ll = false;
-
-// MOTOR A0 ---> Right
-// MOTOR A1 ---> Left
-
-void selection()
-{
-    if (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[2] == 1000 && lsa_reading[3] == 1000 && lsa_reading[4] == 1000) // checks left first
-    {
-        left = true;
-    }
-    else if (lsa_reading[0] == 0 && lsa_reading[1] == 0 && lsa_reading[2] == 0 && lsa_reading[3] == 0 && lsa_reading[4] == 0 && left == true) // checks if there is all black after a left (only left condition)
-    {
-        only_left = true;
-    }
-    else if (lsa_reading[0] == 0 lsa_reading[2] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && left == true) // if straight line is found after only left condition OR after Left + straight condition
-    {
-        if ((left == true) && (only_left == false)) // STR+LEFT
+    for (int i = 0; i < NO_OF_NODES; i++)
+        if (i == 0) // there is no value to compare yet
         {
-            found_left = true;
+            continue;
         }
-        left = false;
-        only_left = false;
-    }
-    else if (lsa_reading[0] == 0 && lsa_reading[1] == 1000 && lsa_reading[2] == 1000 && lsa_reading[3] == 1000 && lsa_reading[4] == 1000) // str + right
-    {
-        right = true;
-
-        if ((lsa_reading[2] == 1000) && (lsa_reading[1] == 1000 && lsa_reading[3] == 1000) && (right == true)) // STR+RIGHT
+        else if (dry_run[i] == 0) // 0 refers to the unfilled cells or the cells with redundancy removed
         {
-            found_straight = true;
-            right = false;
+            continue;
         }
-    }
-    else if (lsa_reading[1] == 1000 && lsa_reading[2] == 1000 && lsa_reading[3] == 1000 && lsa_reading[4] == 1000) // only right
-    {
-        right = true;
-
-        if ((lsa_reading[0] == 0 && lsa_reading[1] == 0 && lsa_reading[2] == 0 && lsa_reading[3] == 0 && lsa_reading[4] == 0) && (right == true) && (found_straight == false)) // ONLY RIGHT
+        /*path is redundant or not depends upon whether there is a dead end or not i.e. the difference between two consecutive values in dry_run have difference of 4 , but also if the angle accounts to 180 degree */
+        else if (fabs(prev_value - dry_run[i]) == 2)
         {
-            found_right = true;
-        }
-    }
-}
-
-char select_turn()
-{
-
-    if (found_left == true)
-    {
-        found_left = false;
-        return 'L';
-    }
-    else if (found_straight == true)
-    {
-        found_straight = false;
-        return 'S';
-    }
-
-    else
-    {
-        return 'B';
-    }
-}
-
-void line_follow_task(void *arg)
-{
-
-    while (1)
-    {
-        get_raw_lsa(); // funtion that updates the lsa readings
-
-        if (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[2] == 1000) // checks left first
-        {
-            /*This is a condition for + shaped and T shaped node. This portion means there exists a left for sure and the turn is left*/
-            left = true;
-        }
-        else if (lsa_reading[2] == 1000 && lsa_reading[3] == 1000 && lsa_reading[4] == 1000)
-        {
-            right = true;
-        }
-
-        if (lsa_reading[0] == 0 && lsa_reading[4] == 0 && (right == 1 || left == 1)) // It has come to normal state after reading right and left
-        {
-            if (lsa_reading[1] == 0 && lsa_reading[2] == 0 && lsa_reading[3] == 0) // checks if there is all black after a left (only left condition)
-            /*this is the condition of only left and only right*/
+            dry_run[i] = 0;
+            dry_run[prev_index] = 0; // we shift our previous index one behind after making the element as 0
+            if (prev_index != 0)     // if redundant values are spotted in first two values itself
             {
-                if (left == 1)
-                {
-                    only_left = true;
-                    set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, left_duty_cycle*1.4);
-                    set_motor_speed(MOTOR_A_1, MOTOR_BACKWARD, right_duty_cycle*1.4);
-                }
-                else
-                {
-                    set_motor_speed(MOTOR_A_0, MOTOR_BACKWARD, left_duty_cycle*1.4);
-                    set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, right_duty_cycle*1.4);
-                }
+                prev_index--;
             }
-            else 
+            prev_value = dry_run[prev_index]; // we get the previous value as per the previous index since it is already shifted
+        }
+        else // This condition means no redundant path was discovered hence we increment the prev_index
+        {
+            prev_value = dry_run[i];
+            do /*this is because prev_index is incremented till it overcomes all the redundant 0's it had created */
             {
-                if (left == 1)
-                {
-                    only_left = false;
-                    set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, left_duty_cycle*1.4);
-                    set_motor_speed(MOTOR_A_1, MOTOR_BACKWARD, right_duty_cycle*1.4);
-                }
-                else
-                {
-                    set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, left_duty_cycle);
-                    set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, right_duty_cycle);
-                }
-            }
-            left = false ;
-            right = false ;
-            only_left = false ;
+                prev_index++;
+            } while (dry_run[prev_index] == 0);
         }
 
-        // Line Following starts here
-        calculate_error();
-        calculate_correction();
+    int length_of_path = 0; // j is the index counter for final run
 
-        left_duty_cycle = bound((GOOD_DUTY_CYCLE - correction), MIN_DUTY_CYCLE, MAX_DUTY_CYCLE);
-        right_duty_cycle = bound((GOOD_DUTY_CYCLE + correction), MIN_DUTY_CYCLE, MAX_DUTY_CYCLE);
-
-        set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, left_duty_cycle); /*goes forward in this case*/
-        set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, right_duty_cycle);
-
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
-}
-
-void app_main()
-{
-    ESP_ERROR_CHECK(enable_lsa());
-    ESP_ERROR_CHECK(enable_motor_driver());
-
-    xTaskCreate(&line_follow_task, "line_follow_task", 4096, NULL, 1, NULL);
-}
-
-void calculate_error()
-{
-
-    int all_black_flag = 1; // assuming initially all black condition
-    float weighted_sum = 0, sum = 0;
-    float pos = 0;
-
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < NO_OF_NODES; i++)
     {
-        if (lsa_reading[i] > BLACK_PATCH)
+        if (dry_run[i] == 0) // all 0's are redundant and hence are not included in node
         {
-            all_black_flag = 0;
-        }
-        weighted_sum += (float)(weights[i]) * (lsa_reading[i]);
-        sum = sum + lsa_reading[i];
-    }
-
-    if (sum != 0) // sum can never be 0 but just for safety purposes
-    {
-        pos = weighted_sum / sum; // This will give us the position wrt line. if +ve then bot is facing left and if -ve the bot is facing to right.
-    }
-
-    if (all_black_flag == 1) // If all black then we check for previous error to assign current error.
-    {
-        if (prev_error > 0)
-        {
-            error = 3;
+            continue;
         }
         else
         {
-            error = -3;
+            final_run[length_of_path] = dry_run[i];
+            length_of_path++;
         }
     }
-    else
+
+    // printing the balues to confirm readings
+    printf("Simplified path : ");
+    for (int i = 0; i < length_of_path; i++)
     {
-        error = pos;
+        printf("%d ", final_run[i]);
     }
-}
-// end of function
-
-void calculate_correction()
-{
-    error = error * 10;              // we need the error correction in range 0-100 so that we can send it directly as duty cycle paramete
-    difference = error - prev_error; // used for calcuating kd
-    cumulative_error += error;       // used for calculating ki
-
-    cumulative_error = bound(cumulative_error, -30, 30);               // bounding cumulative_error to avoid the issue of cumulative_error being very large
-    correction = kp * error + ki * cumulative_error + kd * difference; // defined in http_server.c
-
-    prev_error = error; // update error
-}
-// end of function
-
-float bound(float val, float min, float max) // To bound a certain value in range MAX to MIN
-{
-    if (val > max)
-        val = max;
-    else if (val < min)
-        val = min;
-    return val;
-}
-// end of function lsa_reading[2] == 1000 && lsa_reading[3] == 1000 && lsa_reading[4] == 1000) // checks left first
-    {
-        left = true;
-    }
-    else if (lsa_reading[0] == 0 && lsa_reading[1] == 0 && lsa_reading[2] == 0 && lsa_reading[3] == 0 && lsa_reading[4] == 0 && left == true) // checks if there is all black after a left (only left condition)
-    {
-        only_left = true;
-    }
-    else if (lsa_reading[0] == 0 lsa_reading[2] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && left == true) // if straight line is found after only left condition OR after Left + straight condition
-    {
-        if ((left == true) && (only_left == false)) // STR+LEFT
-        {
-            found_left = true;
-        }
-        left = false;
-        only_left = false;
-    }
-    else if (lsa_reading[0] == 0 && lsa_reading[1] == 1000 && lsa_reading[2] == 1000 && lsa_reading[3] == 1000 && lsa_reading[4] == 1000) // str + right
-    {
-        right = true;
-
-        if ((lsa_reading[2] == 1000) && (lsa_reading[1] == 1000 && lsa_reading[3] == 1000) && (right == true)) // STR+RIGHT
-        {
-            found_straight = true;
-            right = false;
-        }
-    }
-    else if (lsa_reading[1] == 1000 && lsa_reading[2] == 1000 && lsa_reading[3] == 1000 && lsa_reading[4] == 1000) // only right
-    {
-        right = true;
-
-        if ((lsa_reading[0] == 0 && lsa_reading[1] == 0 && lsa_reading[2] == 0 && lsa_reading[3] == 0 && lsa_reading[4] == 0) && (right == true) && (found_straight == false)) // ONLY RIGHT
-        {
-            found_right = true;
-        }
-    }
-}
-
-char select_turn()
-{
-
-    if (found_left == true)
-    {
-        found_left = false;
-        return 'L';
-    }
-    else if (found_straight == true)
-    {
-        found_straight = false;
-        return 'S';
-    }
-
-    else
-    {
-        return 'B';
-    }
-}
-
-void line_follow_task(void *arg)
-{
-
-    while (1)
-    {
-        get_raw_lsa(); // funtion that updates the lsa readings
-
-        if (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[2] == 1000) // checks left first
-        {
-            /*This is a condition for + shaped and T shaped node. This portion means there exists a left for sure and the turn is left*/
-            left = true;
-        }
-        else if (lsa_reading[2] == 1000 && lsa_reading[3] == 1000 && lsa_reading[4] == 1000)
-        {
-            right = true;
-        }
-
-        if (lsa_reading[0] == 0 && lsa_reading[4] == 0 && (right == 1 || left == 1)) // It has come to normal state after reading right and left
-        {
-            if (lsa_reading[1] == 0 && lsa_reading[2] == 0 && lsa_reading[3] == 0) // checks if there is all black after a left (only left condition)
-            /*this is the condition of only left and only right*/
-            {
-                if (left == 1)
-                {
-                    only_left = true;
-                    set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, left_duty_cycle*1.4);
-                    set_motor_speed(MOTOR_A_1, MOTOR_BACKWARD, right_duty_cycle*1.4);
-                }
-                else
-                {
-                    set_motor_speed(MOTOR_A_0, MOTOR_BACKWARD, left_duty_cycle*1.4);
-                    set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, right_duty_cycle*1.4);
-                }
-            }
-            else 
-            {
-                if (left == 1)
-                {
-                    only_left = false;
-                    set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, left_duty_cycle*1.4);
-                    set_motor_speed(MOTOR_A_1, MOTOR_BACKWARD, right_duty_cycle*1.4);
-                }
-                else
-                {
-                    set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, left_duty_cycle);
-                    set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, right_duty_cycle);
-                }
-            }
-            left = false ;
-            right = false ;
-            only_left = false ;
-        }
-
-        // Line Following starts here
-        calculate_error();
-        calculate_correction();
-
-        left_duty_cycle = bound((GOOD_DUTY_CYCLE - correction), MIN_DUTY_CYCLE, MAX_DUTY_CYCLE);
-        right_duty_cycle = bound((GOOD_DUTY_CYCLE + correction), MIN_DUTY_CYCLE, MAX_DUTY_CYCLE);
-
-        set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, left_duty_cycle); /*goes forward in this case*/
-        set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, right_duty_cycle);
-
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
-}
-
-void app_main()
-{
-    ESP_ERROR_CHECK(enable_lsa());
-    ESP_ERROR_CHECK(enable_motor_driver());
-
-    xTaskCreate(&line_follow_task, "line_follow_task", 4096, NULL, 1, NULL);
 }
 
 void calculate_error()
@@ -463,3 +145,302 @@ float bound(float val, float min, float max) // To bound a certain value in rang
     return val;
 }
 // end of function
+
+// all booleans
+bool only_left = false, left = false, right = false, only_right = false, ll = false;
+
+void line_follow_task(void *arg)
+{
+
+    while (1)
+    {
+        get_raw_lsa(); // funtion that updates the lsa readings
+
+        if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
+        {
+            left = 1;
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+            get_raw_lsa(); // funtion that updates the lsa readings
+            if (left == 1 || right == 1)
+            {
+                if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
+                {
+                    printf("left flag confirmed\n");
+                    left = 1;
+                }
+                else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+                {
+                    printf("Right flag confirmed\n");
+                    right = true;
+                }
+                else
+                {
+                    left = 0;
+                    right = 0;
+                }
+            }
+        }
+        else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+        {
+            right = true;
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+            get_raw_lsa(); // funtion that updates the lsa readings
+            if (left == 1 || right == 1)
+            {
+                if ((lsa_reading[0] == 1000) && (lsa_reading[1] == 1000) && (lsa_reading[2] == 1000)) // checks left first
+                {
+                    printf("left flag confirmed\n");
+                    left = 1;
+                }
+                else if (lsa_reading[0] == 0 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+                {
+                    printf("Right flag confirmed\n");
+                    right = 1;
+                }
+                else
+                {
+                    left = 0;
+                    right = 0;
+                }
+            }
+        }
+
+        if (left == 1) // checks left first
+        {
+            while (lsa_reading[0] == 1000 && lsa_reading[1] == 1000)
+            {
+                get_raw_lsa();
+                vTaskDelay(10 / portTICK_PERIOD_MS);
+            }
+
+            vTaskDelay(70 / portTICK_PERIOD_MS);
+
+            get_raw_lsa();
+
+            printf("%d %d %d %d %d\n", lsa_reading[0], lsa_reading[1], lsa_reading[2], lsa_reading[3], lsa_reading[4]);
+
+            if (lsa_reading[1] == 0 && lsa_reading[3] == 0 && lsa_reading[2] == 0)
+            {
+                printf("ONLY LEFT DETECTED");
+                only_left = true;
+            }
+            else if (lsa_reading[2] == 1000 && (lsa_reading[1] == 1000 || lsa_reading[3] == 1000))
+            {
+                printf("STR+LEFT DETECTED");
+                only_left = false;
+            }
+        }
+        else if (right == 1)
+        {
+            printf("Success 101\n");
+
+            while (lsa_reading[4] == 1000 && lsa_reading[3] == 1000)
+            {
+                get_raw_lsa();
+                vTaskDelay(10 / portTICK_PERIOD_MS);
+            }
+
+            vTaskDelay(70 / portTICK_PERIOD_MS);
+            get_raw_lsa();
+            printf("%d %d %d %d %d\n", lsa_reading[0], lsa_reading[1], lsa_reading[2], lsa_reading[3], lsa_reading[4]);
+
+            if ((lsa_reading[0] == 0 && lsa_reading[1] == 0 && lsa_reading[3] == 0 && lsa_reading[2] == 0 && lsa_reading[4] == 0))
+            {
+                printf("ONLY RIGHT DETECTED");
+                only_right = true;
+            }
+            else if (lsa_reading[2] == 1000 && (lsa_reading[1] == 1000 || lsa_reading[3] == 1000))
+            {
+                printf("STR+RIGHT DETECTED");
+                only_right = false;
+            }
+        }
+
+        get_raw_lsa();
+
+        if (left == 1)
+        {
+            // For taking left we always subtract 1
+            if (test_path[pindex - 1] == 1)
+            {
+                test_path[pindex] = 4;
+            }
+            else if (test_path[pindex - 1] == 2)
+            {
+                test_path[pindex] = 1;
+            }
+            else if (test_path[pindex - 1] == 3)
+            {
+                test_path[pindex] = 2;
+            }
+            else
+            {
+                test_path[pindex] = 3;
+            }
+            pindex++;
+
+            while (1)
+            {
+                get_raw_lsa();
+
+                if (lsa_reading[1] == 0)
+                {
+                    ll = true;
+                }
+
+                set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, 75);
+                set_motor_speed(MOTOR_A_1, MOTOR_BACKWARD, 75);
+
+                if ((lsa_reading[1] == 1000 && lsa_reading[2] == 1000) && ll)
+                {
+                    // vTaskDelay(80 / portTICK_PERIOD_MS);
+                    set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
+                    set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
+                    ll = 0;
+                    left = 0;
+                    only_left = 0;
+                    only_right = 0;
+                    right = 0;
+
+                    break;
+                }
+                vTaskDelay(10 / portTICK_PERIOD_MS);
+            }
+        }
+        // This is the condition for dead end and no right and left
+        else if ((right == 0) && (left == 0) && lsa_reading[0] == 0 && lsa_reading[1] == 0 && lsa_reading[3] == 0 && lsa_reading[2] == 0 && lsa_reading[4] == 0)
+        {
+            // For taking dead_end we subtract 2
+            if (test_path[pindex - 1] == 1)
+            {
+                test_path[pindex] = 3;
+            }
+            else if (test_path[pindex - 1] == 2)
+            {
+                test_path[pindex] = 4;
+            }
+            else if (test_path[pindex - 1] == 3)
+            {
+                test_path[pindex] = 1;
+            }
+            else
+            {
+                test_path[pindex] = 2;
+            }
+            pindex++;
+
+            while (lsa_reading[2] == 0)
+            {
+                get_raw_lsa();
+
+                set_motor_speed(MOTOR_A_0, MOTOR_BACKWARD, 75);
+                set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, 75);
+
+                // vTaskDelay(100 / portTICK_PERIOD_MS);
+
+                if (lsa_reading[2] == 1000)
+                {
+                    set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
+                    set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
+
+                    ll = 0;
+                    left = 0;
+                    only_left = 0;
+                    only_right = 0;
+                    right = 0;
+
+                    break;
+                }
+
+                vTaskDelay(10 / portTICK_PERIOD_MS);
+            }
+        }
+        else if (only_right == 1 && right == 1)
+        {
+            // For taking dead_end we add 1
+            if (test_path[pindex - 1] == 1)
+            {
+                test_path[pindex] = 2;
+            }
+            else if (test_path[pindex - 1] == 2)
+            {
+                test_path[pindex] = 3;
+            }
+            else if (test_path[pindex - 1] == 3)
+            {
+                test_path[pindex] = 4;
+            }
+            else
+            {
+                test_path[pindex] = 1;
+            }
+            pindex++;
+
+            while (lsa_reading[2] == 0)
+            {
+                get_raw_lsa();
+
+                set_motor_speed(MOTOR_A_0, MOTOR_BACKWARD, 75);
+                set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, 75);
+
+                // vTaskDelay(100 / portTICK_PERIOD_MS);
+
+                if (lsa_reading[2] == 1000)
+                {
+                    set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
+                    set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
+
+                    ll = 0;
+                    left = 0;
+                    only_left = 0;
+                    only_right = 0;
+                    right = 0;
+
+                    break;
+                }
+
+                vTaskDelay(10 / portTICK_PERIOD_MS);
+            }
+        }
+
+        if (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+        {
+            printf("ALL WHITE BOX DETECTED");
+            while (lsa_reading[0] == 1000 && lsa_reading[1] == 1000 && lsa_reading[3] == 1000 && lsa_reading[2] == 1000 && lsa_reading[4] == 1000)
+            {
+                set_motor_speed(MOTOR_A_0, MOTOR_STOP, 0);
+                set_motor_speed(MOTOR_A_1, MOTOR_STOP, 0);
+            }
+        }
+        // Line Following
+
+        calculate_error();
+        calculate_correction();
+
+        left_duty_cycle = bound((GOOD_DUTY_CYCLE - correction), MIN_DUTY_CYCLE, MAX_DUTY_CYCLE);
+        right_duty_cycle = bound((GOOD_DUTY_CYCLE + correction), MIN_DUTY_CYCLE, MAX_DUTY_CYCLE);
+
+        set_motor_speed(MOTOR_A_1, MOTOR_FORWARD, left_duty_cycle); /*goes forward in this case*/
+        set_motor_speed(MOTOR_A_0, MOTOR_FORWARD, right_duty_cycle);
+
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+
+        // printf("The current readings in ARRAY are : ");
+
+        // for (int i = 0; i < pindex; i++)
+        // {
+        //     printf("%d ", test_path[i]);
+        // }
+        // printf("\n");
+    }
+}
+
+// end of task
+
+void app_main()
+{
+    ESP_ERROR_CHECK(enable_lsa());
+    ESP_ERROR_CHECK(enable_motor_driver());
+
+    xTaskCreate(&line_follow_task, "line_follow_task", 4096, NULL, 1, NULL);
+}

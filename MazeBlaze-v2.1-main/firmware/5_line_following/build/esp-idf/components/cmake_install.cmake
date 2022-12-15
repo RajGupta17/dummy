@@ -1,4 +1,4 @@
-# Install script for directory: /home/raj/MazeBlaze-v2.1-main/firmware/components
+# Install script for directory: /home/prit/Desktop/dummy/MazeBlaze-v2.1-main/firmware/components
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -1,4 +1,4 @@
-/* * Data converted from /home/raj/MazeBlaze-v2.1-main/firmware/5_line_following/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from /home/prit/Desktop/dummy/MazeBlaze-v2.1-main/firmware/5_line_following/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 .section .rodata.embedded

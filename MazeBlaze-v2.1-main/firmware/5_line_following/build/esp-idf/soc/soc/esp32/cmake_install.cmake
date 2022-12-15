@@ -1,4 +1,4 @@
-# Install script for directory: /home/raj/esp/esp-idf/components/soc/soc/esp32
+# Install script for directory: /home/prit/esp/esp-idf/components/soc/soc/esp32
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
