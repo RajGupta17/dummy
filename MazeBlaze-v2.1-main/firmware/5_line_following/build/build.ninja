@@ -2652,7 +2652,11 @@ build esp-idf/app_update/CMakeFiles/__idf_app_update.dir/esp_ota_ops.c.obj: C_CO
   TARGET_COMPILE_PDB = esp-idf/app_update/CMakeFiles/__idf_app_update.dir/__idf_app_update.pdb
   TARGET_PDB = esp-idf/app_update/libapp_update.pdb
 
+<<<<<<< HEAD
 build esp-idf/app_update/CMakeFiles/__idf_app_update.dir/esp_app_desc.c.obj: C_COMPILER____idf_app_update /home/raj/esp/esp-idf/components/app_update/esp_app_desc.c || cmake_object_order_depends_target___idf_app_update
+=======
+build esp-idf/app_update/CMakeFiles/__idf_app_update.dir/esp_app_desc.c.obj: C_COMPILER____idf_app_update /home/prit/esp/esp-idf/components/app_update/esp_app_desc.c || cmake_object_order_depends_target___idf_app_update
+>>>>>>> d9e3c7e4cd762a70594e184610243bdf72da334b
   DEFINES = -D PROJECT_NAME=\"5_line_following\" -DPROJECT_VER=\"e56ad34-dirty\"
   DEP_FILE = esp-idf/app_update/CMakeFiles/__idf_app_update.dir/esp_app_desc.c.obj.d
   FLAGS = -mlongcalls -Wno-frame-address   -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wall -Werror=all -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare -ggdb -Og -std=gnu99 -Wno-old-style-declaration -D_GNU_SOURCE -DIDF_VER=\"v4.2.3-112-ga3374b2d2f-dirty\" -DESP_PLATFORM
