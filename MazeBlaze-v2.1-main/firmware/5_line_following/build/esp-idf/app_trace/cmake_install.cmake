@@ -1,4 +1,4 @@
-# Install script for directory: /home/prit/esp/esp-idf/components/app_trace
+# Install script for directory: /home/raj/esp/esp-idf/components/app_trace
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
